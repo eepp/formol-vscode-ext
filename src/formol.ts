@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 
-export type CommentKind = 'c' | 'prefix';
+export type CommentKind = 'c' | 'prefix' | 'full';
 
 export interface FormolOptions {
     pythonBin: string;

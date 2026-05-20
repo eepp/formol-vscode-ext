@@ -1,7 +1,7 @@
 {
   "name": "formol-vscode",
   "displayName": "Formol",
-  "description": "Reformat the block comment under the caret with Formol.",
+  "description": "Reformat block comments or whole files with Formol.",
   "version": "0.1.0",
   "publisher": "eepp",
   "license": "MIT",
@@ -19,8 +19,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "formol.reformatBlockComment",
-        "title": "Formol: Reformat block comment"
+        "command": "formol.reformat",
+        "title": "Formol: Reformat"
       }
     ],
     "configuration": {
@@ -41,7 +41,7 @@
     },
     "keybindings": [
       {
-        "command": "formol.reformatBlockComment",
+        "command": "formol.reformat",
         "key": "meta+e",
         "when": "editorTextFocus"
       }

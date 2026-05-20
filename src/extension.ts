@@ -1,7 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { CommentBlock, findCBlock, findPyBlock } from './comment';
+import {
+    CommentBlock,
+    findCBlock,
+    findFullText,
+    findGitCommitText,
+    findPyBlock,
+} from './comment';
 import { CommentKind, runFormol } from './formol';
 import { commentKindFor } from './languages';
 
@@ -11,13 +17,18 @@ export function activate(context: vscode.ExtensionContext): void {
     const scriptPath = path.join(context.extensionPath, 'python',
                                  'format_comment.py');
     const cmd = vscode.commands.registerCommand(
-        'formol.reformatBlockComment',
+        'formol.reformat',
         () => reformat(scriptPath),
     );
     context.subscriptions.push(cmd);
 }
 
 export function deactivate(): void {}
+
+interface Target {
+    block: CommentBlock;
+    kind: CommentKind;
+}
 
 async function reformat(scriptPath: string): Promise<void> {
     const editor = vscode.window.activeTextEditor;
@@ -26,20 +37,12 @@ async function reformat(scriptPath: string): Promise<void> {
         return;
     }
 
-    if (editor.selections.length !== 1 || !editor.selection.isEmpty) {
-        vscode.window.showErrorMessage(
-            'Formol: a single caret with no selection is required.');
-        return;
-    }
-
     const doc = editor.document;
     const lang = doc.languageId;
-    const detected = detectBlock(doc, editor.selection.active.line, lang,
-                                 tabSizeOf(editor));
+    const target = detectTarget(doc, editor, lang);
 
-    if (!detected) {
-        vscode.window.showErrorMessage(
-            'Formol: the caret is not inside a recognized block comment.');
+    if (!target) {
+        vscode.window.showErrorMessage(noTargetMessage(lang));
         return;
     }
 
@@ -49,13 +52,13 @@ async function reformat(scriptPath: string): Promise<void> {
     let formatted: string;
 
     try {
-        formatted = await runFormol(detected.block.text, {
+        formatted = await runFormol(target.block.text, {
             pythonBin,
             scriptPath,
-            kind: detected.kind,
-            startCol: detected.block.startCol,
+            kind: target.kind,
+            startCol: target.block.startCol,
             maxLineLen,
-            prefix: detected.kind === 'prefix' ? PY_PREFIX : undefined,
+            prefix: target.kind === 'prefix' ? PY_PREFIX : undefined,
         });
     } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -63,26 +66,47 @@ async function reformat(scriptPath: string): Promise<void> {
         return;
     }
 
-    await editor.edit((eb) => eb.replace(detected.block.range, formatted));
+    await editor.edit((eb) => eb.replace(target.block.range, formatted));
 }
 
-interface Detected {
-    block: CommentBlock;
-    kind: CommentKind;
-}
+function detectTarget(doc: vscode.TextDocument, editor: vscode.TextEditor,
+                      lang: string): Target | undefined {
+    if (lang === 'plaintext') {
+        const block = findFullText(doc);
+        return block ? { block, kind: 'full' } : undefined;
+    }
 
-function detectBlock(doc: vscode.TextDocument, line: number, lang: string,
-                     tabSize: number): Detected | undefined {
-    const kind = commentKindFor(lang);
+    if (lang === 'git-commit') {
+        const block = findGitCommitText(doc);
+        return block ? { block, kind: 'full' } : undefined;
+    }
 
-    if (!kind) {
+    if (editor.selections.length !== 1 || !editor.selection.isEmpty) {
+        vscode.window.showErrorMessage(
+            'Formol: a single caret with no selection is required.');
         return undefined;
     }
 
+    const kind = commentKindFor(lang);
+
+    if (!kind || kind === 'full') {
+        return undefined;
+    }
+
+    const line = editor.selection.active.line;
+    const tabSize = tabSizeOf(editor);
     const block = kind === 'c'
         ? findCBlock(doc, line, tabSize)
         : findPyBlock(doc, line, tabSize);
     return block ? { block, kind } : undefined;
+}
+
+function noTargetMessage(lang: string): string {
+    if (lang === 'plaintext' || lang === 'git-commit') {
+        return 'Formol: nothing to reformat.';
+    }
+
+    return 'Formol: the caret is not inside a recognized block comment.';
 }
 
 function tabSizeOf(editor: vscode.TextEditor): number {

@@ -14,6 +14,58 @@ export interface CommentBlock {
     startCol: number;
 }
 
+// Returns the formattable region for a plain text document (the whole
+// document) or `undefined` if it's empty.
+export function findFullText(doc: vscode.TextDocument):
+        CommentBlock | undefined {
+    if (doc.lineCount === 0) {
+        return undefined;
+    }
+
+    const lastLine = doc.lineCount - 1;
+    const range = new vscode.Range(0, 0, lastLine,
+                                   doc.lineAt(lastLine).text.length);
+    const text = doc.getText(range);
+
+    if (text.length === 0) {
+        return undefined;
+    }
+
+    return { range, text, startCol: 0 };
+}
+
+// Returns the formattable region for a Git commit message document:
+// everything from the start up to the line just before the first line
+// whose first character is `#` (the comment block that Git generates).
+// Trailing blank lines are excluded from the region so they survive
+// verbatim around the `#` block.
+export function findGitCommitText(doc: vscode.TextDocument):
+        CommentBlock | undefined {
+    let firstHashLine = doc.lineCount;
+
+    for (let i = 0; i < doc.lineCount; i++) {
+        if (doc.lineAt(i).text.startsWith('#')) {
+            firstHashLine = i;
+            break;
+        }
+    }
+
+    let endLine = firstHashLine - 1;
+
+    while (endLine >= 0 && doc.lineAt(endLine).text.trim() === '') {
+        endLine--;
+    }
+
+    if (endLine < 0) {
+        return undefined;
+    }
+
+    const range = new vscode.Range(0, 0, endLine,
+                                   doc.lineAt(endLine).text.length);
+    const text = doc.getText(range);
+    return { range, text, startCol: 0 };
+}
+
 // Finds the C/C++ block comment containing `line`, or `undefined` if
 // the line isn't inside one.
 //

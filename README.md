@@ -1,8 +1,10 @@
 # Formol for VS Code
 
-Reformat the block comment under the caret to follow [eepp's plain text format](https://0x3b.org/files/eepp-plain-text-format.html) using [Formol](https://github.com/eepp/formol).
+Reformat a whole plain text document or a block comment under the caret to follow [eepp's plain text format](https://0x3b.org/files/eepp-plain-text-format.html) using [Formol](https://github.com/eepp/formol).
 
-Supports most popular languages that use:
+Only applies whole document reformatting for plain text and Git commit message documents.
+
+For comment reformatting, this extension supports most popular languages that use:
 
 * C-style block comments:
 
@@ -24,14 +26,17 @@ Supports most popular languages that use:
 
 ## Usage
 
-Place a single caret either:
+Run **Formol: Reformat** (default keybinding: <kbd>Meta</kbd>+<kbd>E</kbd>):
 
-- Between `/*` and `*/` (C-style block comment).
-- On a `#`-prefixed comment line (Python-style comment).
+* In a plain text file: reformats the whole file.
 
-Then run **Formol: Reformat block comment** (default keybinding: <kbd>Meta</kbd>+<kbd>E</kbd>).
+* In a Git commit message: reformats the whole message, leaving the
+  trailing `#` comment block that Git generates untouched.
 
-The command reformats the whole comment following eepp's plain text format.
+* In any other supported language: place a single caret between `/*`
+  and `*/` (C-style block comment) or on a `#`-prefixed comment line
+  (Python-style comment), then run the command to reformat that
+  comment.
 
 ## Configuration
 

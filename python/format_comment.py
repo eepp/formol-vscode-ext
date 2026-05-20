@@ -12,7 +12,7 @@ import formol
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument('--kind', choices=('c', 'prefix'), required=True)
+    ap.add_argument('--kind', choices=('c', 'prefix', 'full'), required=True)
     ap.add_argument('--start-col', type=int, default=0)
     ap.add_argument('--max-line-len', type=int, default=72)
     ap.add_argument('--prefix', default='# ')
@@ -23,11 +23,13 @@ def main() -> int:
         if args.kind == 'c':
             out = formol.format_c_block_comment(comment, args.start_col,
                                                 args.max_line_len)
-        else:
+        elif args.kind == 'prefix':
             out = formol.format_prefixed_block_comment(comment,
                                                        args.start_col,
                                                        args.max_line_len,
                                                        args.prefix)
+        else:
+            out = formol.format(comment, args.max_line_len)
     except ValueError as exc:
         print(f'formol: invalid comment: {exc}', file=sys.stderr)
         return 2
