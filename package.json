@@ -1,0 +1,60 @@
+{
+  "name": "formol-vscode",
+  "displayName": "Formol",
+  "description": "Reformat the block comment under the caret with Formol.",
+  "version": "0.1.0",
+  "publisher": "eepp",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eepp/formol-vscode-ext.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Formatters"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "formol.reformatBlockComment",
+        "title": "Formol: Reformat block comment"
+      }
+    ],
+    "configuration": {
+      "title": "Formol",
+      "properties": {
+        "formol.maxLineLength": {
+          "type": "integer",
+          "default": 72,
+          "minimum": 1,
+          "description": "Maximum line length, in visual columns, of a reformatted comment."
+        },
+        "formol.pythonBin": {
+          "type": "string",
+          "default": "python3",
+          "description": "Path to the Python interpreter that can `import formol`."
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "formol.reformatBlockComment",
+        "key": "meta+e",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}
